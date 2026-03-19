@@ -23,6 +23,8 @@ pip-wheel-metadata/
 *.rpm
 *.dmg
 *.pkg
+*.spec
+.spec
 
 # Test, coverage, and tooling caches
 .pytest_cache/
