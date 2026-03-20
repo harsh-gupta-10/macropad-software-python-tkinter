@@ -185,7 +185,11 @@ def update_profile_key(profile_index, key_index, new_keys, name=None, extra_data
         # Add any extra data fields
         if extra_data:
             for key, value in extra_data.items():
-                data["profiles"][profile_str][key_str][key] = value
+                if value is None:
+                    if key in data["profiles"][profile_str][key_str]:
+                        del data["profiles"][profile_str][key_str][key]
+                else:
+                    data["profiles"][profile_str][key_str][key] = value
             
         # Save the updated JSON
         with open(keysfile_path, 'w', encoding='utf-8') as f:

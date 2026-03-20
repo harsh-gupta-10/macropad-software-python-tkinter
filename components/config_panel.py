@@ -225,6 +225,46 @@ class ConfigPanel:
         software_save_button = tk.Button(software_tab, text="Save", bg="#0EA5E9", fg="#082F49", font=("Segoe UI", 10, "bold"), relief="flat", command=self.save_config)
         software_save_button.pack(pady=10)
 
+        # Tab for Text/Paragraph typing
+        text_tab = tk.Frame(self.tab_control, bg="#0F172A")
+        self.tab_control.add(text_tab, text="Text/Para")
+
+        tk.Label(text_tab, text="Name(Use):", bg="#0F172A", fg="#E2E8F0", font=("Segoe UI", 11, "bold")).pack(pady=(8, 4))
+        self.textpara_name_box = tk.Text(text_tab, height=1.2, width=30, wrap="word", bg="#0B1220", fg="#E2E8F0", insertbackground="#E2E8F0", font=("Segoe UI", 10), relief="flat")
+        self.textpara_name_box.pack(pady=(0, 8))
+
+        tk.Label(text_tab, text="Text to Type:", bg="#0F172A", fg="#E2E8F0", font=("Segoe UI", 10, "bold")).pack(pady=(2, 4))
+        self.textpara_content_box = tk.Text(text_tab, height=7, width=32, wrap="word", bg="#0B1220", fg="#E2E8F0", insertbackground="#E2E8F0", font=("Segoe UI", 10), relief="flat")
+        self.textpara_content_box.pack(pady=(0, 8), padx=12)
+
+        type_row = tk.Frame(text_tab, bg="#0F172A")
+        type_row.pack(pady=(0, 6))
+        tk.Label(type_row, text="Typing Style:", bg="#0F172A", fg="#E2E8F0").pack(side="left", padx=(0, 6))
+        self.text_type_var = tk.StringVar(value="single")
+        ttk.Combobox(
+            type_row,
+            textvariable=self.text_type_var,
+            state="readonly",
+            values=["single", "line-by-line", "paragraph"],
+            width=14,
+            style="App.TCombobox",
+        ).pack(side="left")
+
+        self.text_enter_var = tk.BooleanVar(value=True)
+        tk.Checkbutton(
+            text_tab,
+            text="Press Enter after typing",
+            variable=self.text_enter_var,
+            bg="#0F172A",
+            fg="#E2E8F0",
+            selectcolor="#0B1220",
+            activebackground="#0F172A",
+            activeforeground="#E2E8F0",
+        ).pack(pady=(0, 8))
+
+        text_save_button = tk.Button(text_tab, text="Save", bg="#0EA5E9", fg="#082F49", font=("Segoe UI", 10, "bold"), relief="flat", command=self.save_config)
+        text_save_button.pack(pady=(0, 8))
+
         # Tab for Special Keys Configuration
         special_tab = tk.Frame(self.tab_control, bg="#0F172A")
         self.tab_control.add(special_tab, text="Special Keys")
@@ -350,15 +390,31 @@ class ConfigPanel:
         # Get configuration from the active tab
         active_tab = self.tab_control.index("current")  # Get the current tab index
         
+        text_content = None
+        text_type = "single"
+        text_press_enter = None
+
         if active_tab == 0:  # Basic tab
             specific_key = self.specific_keys_var.get()
             name = self.text_box.get("1.0", "end-1c").strip()
             key_combination = [specific_key.lower()]
             software = None
+            extra_data = {
+                "software": None,
+                "text_content": None,
+                "text_type": None,
+                "text_press_enter": None,
+            }
         elif active_tab == 1:  # Advanced tab
             num_keys = self.key_combo_var.get()
             name = self.advanced_text_box.get("1.0", "end-1c").strip()
             software = None
+            extra_data = {
+                "software": None,
+                "text_content": None,
+                "text_type": None,
+                "text_press_enter": None,
+            }
             
             if num_keys == 2:
                 # 2-key combination
@@ -378,7 +434,7 @@ class ConfigPanel:
                     
                 main_key = self.third_key_var.get().lower()
                 key_combination = modifiers + [main_key]
-        else:  # Software tab
+        elif active_tab == 2:  # Software tab
             name = self.software_text_box.get("1.0", "end-1c").strip()
             # Use custom path if provided, otherwise use selected software
             if self.custom_path_var.get().strip():
@@ -391,11 +447,36 @@ class ConfigPanel:
                 key_combination = [self.software_modifier_var.get().lower()]
             else:
                 key_combination = []
+            extra_data = {
+                "software": software,
+                "text_content": None,
+                "text_type": None,
+                "text_press_enter": None,
+            }
+        elif active_tab == 3:  # Text/Para tab
+            name = self.textpara_name_box.get("1.0", "end-1c").strip()
+            software = None
+            key_combination = ["text_input"]
+            text_content = self.textpara_content_box.get("1.0", "end-1c")
+            text_type = self.text_type_var.get()
+            text_press_enter = bool(self.text_enter_var.get())
+            extra_data = {
+                "software": None,
+                "text_content": text_content,
+                "text_type": text_type,
+                "text_press_enter": text_press_enter,
+            }
+
+            if not text_content.strip():
+                messagebox.showwarning("Missing Text", "Please enter text to type.")
+                return
+        else:
+            messagebox.showwarning("Unsupported Tab", "Please use Basic, Advanced, Software, or Text/Para tab to save key configuration.")
+            return
         
-        # Create additional data for software
-        extra_data = {}
-        if software:
-            extra_data["software"] = software
+        # Ensure extra fields are cleaned up when switching action types.
+        if name == "":
+            name = f"Key {key_index}"
         
         # Update the key configuration
         if update_profile_key(profile_index, key_index, key_combination, name, extra_data):

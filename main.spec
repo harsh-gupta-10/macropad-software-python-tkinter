@@ -1,11 +1,16 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+
 
 a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('keysfile.json', '.')],
+    datas=[
+        (os.path.join('..', 'hardware', 'keysfile.json'), '.'),
+        ('special-keyout.json', '.'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -22,7 +27,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='main',
+    name='MacroPadConfigurator-V2.5',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
