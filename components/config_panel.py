@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from engine import update_profile_key, load_special_keys, update_special_key
+from engine import update_profile_key, load_special_keys, update_special_key, load_settings, update_settings
 import os
 
 class ConfigPanel:
@@ -51,7 +51,7 @@ class ConfigPanel:
         )
 
         config_frame = tk.Frame(self.parent, bg="#111827", bd=1, relief="ridge", highlightbackground="#1F2937", highlightthickness=1)
-        config_frame.place(x=540, y=70, width=390, height=400)
+        config_frame.place(x=540, y=10, width=390, height=430)
 
         tk.Label(config_frame, text="Key Changer Panel", bg="#111827", fg="#F8FAFC", font=("Segoe UI", 13, "bold"), pady=6).pack()
 
@@ -97,16 +97,20 @@ class ConfigPanel:
         advanced_tab = tk.Frame(self.tab_control, bg="#0F172A")
         self.tab_control.add(advanced_tab, text="Advanced")
 
+        # Create inner scrollable frame
+        advanced_scroll_frame = tk.Frame(advanced_tab, bg="#0F172A")
+        advanced_scroll_frame.pack(side="top", fill="x", expand=False, pady=5)
+
         # Name input box at the top
-        self.advanced_text_label = tk.Label(advanced_tab, text="Name(Use):", bg="#0F172A", fg="#E2E8F0", font=("Segoe UI", 11, "bold"))
+        self.advanced_text_label = tk.Label(advanced_scroll_frame, text="Name(Use):", bg="#0F172A", fg="#E2E8F0", font=("Segoe UI", 11, "bold"))
         self.advanced_text_label.pack(pady=5)
 
-        self.advanced_text_box = tk.Text(advanced_tab, height=1.2, width=30, wrap="word", bg="#0B1220", fg="#E2E8F0", insertbackground="#E2E8F0", font=("Segoe UI", 10), relief="flat")
+        self.advanced_text_box = tk.Text(advanced_scroll_frame, height=1.2, width=30, wrap="word", bg="#0B1220", fg="#E2E8F0", insertbackground="#E2E8F0", font=("Segoe UI", 10), relief="flat")
         self.advanced_text_box.pack(pady=10)
 
         # Radio buttons for key combination options
         self.key_combo_var = tk.IntVar(value=2)
-        radio_frame = tk.Frame(advanced_tab, bg="#0F172A")
+        radio_frame = tk.Frame(advanced_scroll_frame, bg="#0F172A")
         radio_frame.pack(pady=5)
         
         tk.Radiobutton(radio_frame, text="2 Keys", variable=self.key_combo_var, value=2, 
@@ -116,9 +120,9 @@ class ConfigPanel:
                       bg="#0F172A", fg="#E2E8F0", selectcolor="#0B1220",
                       command=self.update_key_dropdowns).pack(side="left", padx=20)
 
-        # Frame for Dropdowns
-        self.dropdown_frame = tk.Frame(advanced_tab, bg="#0F172A")
-        self.dropdown_frame.pack(pady=10)
+        # Frame for Dropdowns (doesn't expand vertically)
+        self.dropdown_frame = tk.Frame(advanced_scroll_frame, bg="#0F172A")
+        self.dropdown_frame.pack(pady=10, fill="none", expand=False)
 
         # First modifier dropdown
         self.first_modifier_label = tk.Label(self.dropdown_frame, text="First Modifier:", bg="#0F172A", fg="#E2E8F0")
@@ -165,9 +169,9 @@ class ConfigPanel:
         # Initialize dropdowns based on default radio selection
         self.update_key_dropdowns()
 
-        # Save Button
+        # Save Button (pinned at bottom)
         advanced_save_button = tk.Button(advanced_tab, text="Save", bg="#0EA5E9", fg="#082F49", font=("Segoe UI", 10, "bold"), relief="flat", command=self.save_config)
-        advanced_save_button.pack(pady=10)
+        advanced_save_button.pack(side="bottom", pady=10)
 
         # Tab for Software Configuration
         software_tab = tk.Frame(self.tab_control, bg="#0F172A")
@@ -331,19 +335,139 @@ class ConfigPanel:
         self.toggle_special_mode()
         self.load_special_config()
 
-    def browse_software(self):
-        """Open file dialog to browse for executable"""
-        file_path = filedialog.askopenfilename(
-            title="Select Application",
-            filetypes=[("Executable files", "*.exe"), ("All files", "*.*")]
+        # Tab for Settings Configuration
+        settings_tab = tk.Frame(self.tab_control, bg="#0F172A")
+        self.tab_control.add(settings_tab, text="Settings")
+
+        # Profile Count Configuration
+        profile_frame = tk.Frame(settings_tab, bg="#0F172A")
+        profile_frame.pack(pady=15, padx=10, fill="x")
+
+        tk.Label(profile_frame, text="Active Profiles:", bg="#0F172A", fg="#E2E8F0", font=("Segoe UI", 11, "bold")).pack(pady=(0, 8))
+        
+        self.profiles_var = tk.IntVar(value=6)
+        profiles_button_frame = tk.Frame(profile_frame, bg="#0F172A")
+        profiles_button_frame.pack(pady=5)
+        
+        for profile_count in [4, 6, 8, 10]:
+            tk.Radiobutton(
+                profiles_button_frame, 
+                text=f"{profile_count} Profiles", 
+                variable=self.profiles_var, 
+                value=profile_count,
+                bg="#0F172A", 
+                fg="#E2E8F0", 
+                selectcolor="#0B1220",
+                activebackground="#0F172A",
+                activeforeground="#E2E8F0"
+            ).pack(side="left", padx=8, pady=3)
+
+        # Encoder Speed Configuration
+        encoder_frame = tk.Frame(settings_tab, bg="#0F172A")
+        encoder_frame.pack(pady=15, padx=10, fill="x")
+
+        tk.Label(encoder_frame, text="Encoder Speed Settings:", bg="#0F172A", fg="#E2E8F0", font=("Segoe UI", 11, "bold")).pack(pady=(0, 10))
+
+        # Volume Encoder Speed
+        volume_row = tk.Frame(encoder_frame, bg="#0F172A")
+        volume_row.pack(pady=8, fill="x")
+        
+        tk.Label(volume_row, text="Volume Encoder Speed:", bg="#0F172A", fg="#E2E8F0", font=("Segoe UI", 10)).pack(side="left", padx=(0, 10))
+        
+        self.volume_speed_var = tk.IntVar(value=3)
+        
+        tk.Button(volume_row, text="−", bg="#334155", fg="#E2E8F0", width=3, relief="flat", command=lambda: self.adjust_volume_speed(-1)).pack(side="left", padx=2)
+        volume_spinbox = tk.Spinbox(
+            volume_row, 
+            from_=1, 
+            to=5, 
+            textvariable=self.volume_speed_var,
+            width=5,
+            bg="#0B1220",
+            fg="#E2E8F0",
+            relief="flat",
+            font=("Segoe UI", 10, "bold")
         )
-        if file_path:
-            self.custom_path_var.set(file_path)
-            # Also update the name if it's empty
-            if not self.software_text_box.get("1.0", "end-1c").strip():
-                app_name = os.path.splitext(os.path.basename(file_path))[0]
-                self.software_text_box.delete("1.0", "end")
-                self.software_text_box.insert("1.0", f"Open {app_name}")
+        volume_spinbox.pack(side="left", padx=2)
+        tk.Button(volume_row, text="+", bg="#334155", fg="#E2E8F0", width=3, relief="flat", command=lambda: self.adjust_volume_speed(1)).pack(side="left", padx=2)
+        
+        self.volume_speed_label = tk.Label(volume_row, text="(Slower → Faster)", bg="#0F172A", fg="#96D1FF", font=("Segoe UI", 9, "italic"))
+        self.volume_speed_label.pack(side="left", padx=10)
+
+        # Display Encoder Speed
+        display_row = tk.Frame(encoder_frame, bg="#0F172A")
+        display_row.pack(pady=8, fill="x")
+        
+        tk.Label(display_row, text="Display Encoder Speed:", bg="#0F172A", fg="#E2E8F0", font=("Segoe UI", 10)).pack(side="left", padx=(0, 10))
+        
+        self.display_speed_var = tk.IntVar(value=1)
+        
+        tk.Button(display_row, text="−", bg="#334155", fg="#E2E8F0", width=3, relief="flat", command=lambda: self.adjust_display_speed(-1)).pack(side="left", padx=2)
+        display_spinbox = tk.Spinbox(
+            display_row, 
+            from_=1, 
+            to=5, 
+            textvariable=self.display_speed_var,
+            width=5,
+            bg="#0B1220",
+            fg="#E2E8F0",
+            relief="flat",
+            font=("Segoe UI", 10, "bold")
+        )
+        display_spinbox.pack(side="left", padx=2)
+        tk.Button(display_row, text="+", bg="#334155", fg="#E2E8F0", width=3, relief="flat", command=lambda: self.adjust_display_speed(1)).pack(side="left", padx=2)
+        
+        self.display_speed_label = tk.Label(display_row, text="(Slower → Faster)", bg="#0F172A", fg="#96D1FF", font=("Segoe UI", 9, "italic"))
+        self.display_speed_label.pack(side="left", padx=10)
+
+        # Load current settings
+        self.load_settings_ui()
+
+        # Save Button for Settings
+        settings_save_button = tk.Button(settings_tab, text="Save Settings", bg="#0EA5E9", fg="#082F49", font=("Segoe UI", 10, "bold"), relief="flat", command=self.save_settings)
+        settings_save_button.pack(pady=15)
+
+    def adjust_volume_speed(self, delta):
+        """Adjust volume speed with bounds checking"""
+        current = self.volume_speed_var.get()
+        new_value = current + delta
+        if 1 <= new_value <= 5:
+            self.volume_speed_var.set(new_value)
+
+    def adjust_display_speed(self, delta):
+        """Adjust display speed with bounds checking"""
+        current = self.display_speed_var.get()
+        new_value = current + delta
+        if 1 <= new_value <= 5:
+            self.display_speed_var.set(new_value)
+
+    def load_settings_ui(self):
+        """Load settings from JSON and populate UI"""
+        try:
+            settings = load_settings()
+            active_profiles = settings.get("active_profiles", 6)
+            encoder_speeds = settings.get("encoder_speeds", {})
+            
+            self.profiles_var.set(active_profiles)
+            self.volume_speed_var.set(encoder_speeds.get("volume", 3))
+            self.display_speed_var.set(encoder_speeds.get("display", 1))
+        except Exception as e:
+            print(f"Error loading settings UI: {e}")
+
+    def save_settings(self):
+        """Save settings to JSON"""
+        try:
+            active_profiles = self.profiles_var.get()
+            volume_speed = self.volume_speed_var.get()
+            display_speed = self.display_speed_var.get()
+            
+            update_settings("active_profiles", active_profiles)
+            update_settings("encoder_speeds.volume", volume_speed)
+            update_settings("encoder_speeds.display", display_speed)
+            
+            messagebox.showinfo("Success", "Settings saved successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error saving settings: {e}")
 
     def update_specific_keys(self, event=None):
         """Update the specific keys dropdown based on the selected category."""
@@ -400,6 +524,7 @@ class ConfigPanel:
             key_combination = [specific_key.lower()]
             software = None
             extra_data = {
+                "action": "key_combo",
                 "software": None,
                 "text_content": None,
                 "text_type": None,
@@ -410,6 +535,7 @@ class ConfigPanel:
             name = self.advanced_text_box.get("1.0", "end-1c").strip()
             software = None
             extra_data = {
+                "action": "key_combo",
                 "software": None,
                 "text_content": None,
                 "text_type": None,
@@ -448,6 +574,7 @@ class ConfigPanel:
             else:
                 key_combination = []
             extra_data = {
+                "action": "software",
                 "software": software,
                 "text_content": None,
                 "text_type": None,
@@ -461,6 +588,7 @@ class ConfigPanel:
             text_type = self.text_type_var.get()
             text_press_enter = bool(self.text_enter_var.get())
             extra_data = {
+                "action": "text_input",
                 "software": None,
                 "text_content": text_content,
                 "text_type": text_type,
@@ -648,28 +776,28 @@ class ConfigPanel:
             self.second_modifier_var.set("None")
             
             # First key (modifier)
-            self.first_modifier_label.pack(pady=(5,0))
-            self.modifier_dropdown_1.pack(pady=(0,5))
+            self.first_modifier_label.pack(pady=(5,2))
+            self.modifier_dropdown_1.pack(pady=(0,3))
             
             # Second key (main key)
-            self.third_key_label.pack(pady=(5,0))
+            self.third_key_label.pack(pady=(5,2))
             self.third_dropdown.pack(pady=(0,5))
             
         else:  # num_keys == 3
-            # Show all 3 dropdowns
+            # Show all 3 dropdowns (centered)
             self.first_modifier_var.set("None")
             self.second_modifier_var.set("None")
             
-            # First modifier
-            self.first_modifier_label.pack(pady=(5,0))
-            self.modifier_dropdown_1.pack(pady=(0,5))
+            # First modifier label and dropdown
+            self.first_modifier_label.pack(pady=(5,2))
+            self.modifier_dropdown_1.pack(pady=(0,3))
             
-            # Second modifier
-            self.second_modifier_label.pack(pady=(5,0))
-            self.modifier_dropdown_2.pack(pady=(0,5))
+            # Second modifier label and dropdown
+            self.second_modifier_label.pack(pady=(5,2))
+            self.modifier_dropdown_2.pack(pady=(0,3))
             
-            # Main key
-            self.third_key_label.pack(pady=(5,0))
+            # Main key label and dropdown
+            self.third_key_label.pack(pady=(5,2))
             self.third_dropdown.pack(pady=(0,5))
 
 if __name__ == "__main__":

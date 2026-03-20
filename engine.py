@@ -13,9 +13,18 @@ def get_json_path():
         # Create the file if it doesn't exist
         if not os.path.exists(o_drive_path):
             try:
-                # Create a default empty structure
-                default_data = {"profiles": {}}
-                for i in range(6):  # 6 profiles (0-5)
+                # Create a default structure with settings and profiles
+                default_data = {
+                    "settings": {
+                        "active_profiles": 6,
+                        "encoder_speeds": {
+                            "volume": 3,
+                            "display": 1
+                        }
+                    },
+                    "profiles": {}
+                }
+                for i in range(10):  # Create 10 profiles (0-9)
                     default_data["profiles"][str(i)] = {}
                     for j in range(1, 10):  # 9 keys (1-9)
                         default_data["profiles"][str(i)][str(j)] = {}
@@ -212,6 +221,98 @@ def load_profiles():
     except Exception as e:
         print(f"Error loading profiles: {e}")
         return {}
+
+
+def _ensure_settings_exist():
+    """Ensure settings section exists in keysfile.json with defaults"""
+    keysfile_path = get_json_path()
+    try:
+        with open(keysfile_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        # Add settings if they don't exist
+        if "settings" not in data:
+            data["settings"] = {
+                "active_profiles": 6,
+                "encoder_speeds": {
+                    "volume": 3,
+                    "display": 1
+                }
+            }
+            with open(keysfile_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+    except Exception as e:
+        print(f"Error ensuring settings exist: {e}")
+
+
+def load_settings():
+    """Load settings from keysfile.json"""
+    keysfile_path = get_json_path()
+    _ensure_settings_exist()
+    try:
+        with open(keysfile_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return data.get("settings", {
+            "active_profiles": 6,
+            "encoder_speeds": {
+                "volume": 3,
+                "display": 1
+            }
+        })
+    except Exception as e:
+        print(f"Error loading settings: {e}")
+        return {
+            "active_profiles": 6,
+            "encoder_speeds": {
+                "volume": 3,
+                "display": 1
+            }
+        }
+
+
+def update_settings(active_profiles=None, volume_speed=None, display_speed=None):
+    """Update settings in keysfile.json"""
+    keysfile_path = get_json_path()
+    _ensure_settings_exist()
+    try:
+        with open(keysfile_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        if "settings" not in data:
+            data["settings"] = {
+                "active_profiles": 6,
+                "encoder_speeds": {
+                    "volume": 3,
+                    "display": 1
+                }
+            }
+        
+        # Update settings fields if provided
+        if active_profiles is not None:
+            # Validate: must be 4, 6, 8, or 10
+            if active_profiles in [4, 6, 8, 10]:
+                data["settings"]["active_profiles"] = active_profiles
+        
+        if volume_speed is not None:
+            # Validate: must be 1-5
+            if 1 <= volume_speed <= 5:
+                data["settings"]["encoder_speeds"]["volume"] = volume_speed
+        
+        if display_speed is not None:
+            # Validate: must be 1-5
+            if 1 <= display_speed <= 5:
+                data["settings"]["encoder_speeds"]["display"] = display_speed
+        
+        # Save updated settings
+        with open(keysfile_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+        
+        print("Settings updated successfully")
+        return True
+        
+    except Exception as e:
+        print(f"Error updating settings: {e}")
+        return False
 
 
 def load_special_keys():

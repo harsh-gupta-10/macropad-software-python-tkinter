@@ -12,7 +12,7 @@ class StatusBar:
         self.stop_thread = False  # Flag to control the connection check thread
 
         status_frame = tk.Frame(self.root, bg="#0B1220", bd=1, relief="sunken", highlightbackground="#1E293B", highlightthickness=1)
-        status_frame.place(x=10, y=486, width=920, height=40)
+        status_frame.place(x=10, y=450, width=920, height=40)
 
         # Left frame for User Action status
         self.user_action_frame = tk.Frame(status_frame, bg="#0B1220")

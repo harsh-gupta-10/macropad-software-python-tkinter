@@ -18,8 +18,8 @@ class MacroPadConfigurator:
     def __init__(self, root):
         self.root = root
         self.root.title("MacroPad Configurator")
-        self.root.geometry("940x540")
-        self.root.minsize(940, 540)
+        self.root.geometry("940x500")
+        self.root.minsize(940, 500)
         self.root.configure(bg="#020617")
         
         # Track selected profile and key

@@ -7,7 +7,7 @@ class KeypadSection:
         self.app = app  # Reference to main app
         
         self.keypad_frame = tk.Frame(self.root, bg="#0F172A", bd=1, relief="ridge", highlightbackground="#1E293B", highlightthickness=1)
-        self.keypad_frame.place(x=200, y=70, width=330, height=370)
+        self.keypad_frame.place(x=200, y=10, width=330, height=430)
         
         tk.Label(self.keypad_frame, text="Keypad", bg="#0F172A", fg="#E2E8F0", 
                 font=("Segoe UI", 13, "bold"), pady=7).grid(row=0, column=0, columnspan=3)
