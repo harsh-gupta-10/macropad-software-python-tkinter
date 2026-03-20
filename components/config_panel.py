@@ -339,29 +339,6 @@ class ConfigPanel:
         settings_tab = tk.Frame(self.tab_control, bg="#0F172A")
         self.tab_control.add(settings_tab, text="Settings")
 
-        # Profile Count Configuration
-        profile_frame = tk.Frame(settings_tab, bg="#0F172A")
-        profile_frame.pack(pady=15, padx=10, fill="x")
-
-        tk.Label(profile_frame, text="Active Profiles:", bg="#0F172A", fg="#E2E8F0", font=("Segoe UI", 11, "bold")).pack(pady=(0, 8))
-        
-        self.profiles_var = tk.IntVar(value=6)
-        profiles_button_frame = tk.Frame(profile_frame, bg="#0F172A")
-        profiles_button_frame.pack(pady=5)
-        
-        for profile_count in [4, 6, 8, 10]:
-            tk.Radiobutton(
-                profiles_button_frame, 
-                text=f"{profile_count} Profiles", 
-                variable=self.profiles_var, 
-                value=profile_count,
-                bg="#0F172A", 
-                fg="#E2E8F0", 
-                selectcolor="#0B1220",
-                activebackground="#0F172A",
-                activeforeground="#E2E8F0"
-            ).pack(side="left", padx=8, pady=3)
-
         # Encoder Speed Configuration
         encoder_frame = tk.Frame(settings_tab, bg="#0F172A")
         encoder_frame.pack(pady=15, padx=10, fill="x")
@@ -445,10 +422,8 @@ class ConfigPanel:
         """Load settings from JSON and populate UI"""
         try:
             settings = load_settings()
-            active_profiles = settings.get("active_profiles", 6)
             encoder_speeds = settings.get("encoder_speeds", {})
             
-            self.profiles_var.set(active_profiles)
             self.volume_speed_var.set(encoder_speeds.get("volume", 3))
             self.display_speed_var.set(encoder_speeds.get("display", 1))
         except Exception as e:
@@ -457,11 +432,9 @@ class ConfigPanel:
     def save_settings(self):
         """Save settings to JSON"""
         try:
-            active_profiles = self.profiles_var.get()
             volume_speed = self.volume_speed_var.get()
             display_speed = self.display_speed_var.get()
             
-            update_settings("active_profiles", active_profiles)
             update_settings("encoder_speeds.volume", volume_speed)
             update_settings("encoder_speeds.display", display_speed)
             

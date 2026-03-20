@@ -270,8 +270,8 @@ def load_settings():
         }
 
 
-def update_settings(active_profiles=None, volume_speed=None, display_speed=None):
-    """Update settings in keysfile.json"""
+def update_settings(setting_key, value):
+    """Update settings in keysfile.json using dot notation keys"""
     keysfile_path = get_json_path()
     _ensure_settings_exist()
     try:
@@ -287,21 +287,14 @@ def update_settings(active_profiles=None, volume_speed=None, display_speed=None)
                 }
             }
         
-        # Update settings fields if provided
-        if active_profiles is not None:
-            # Validate: must be 4, 6, 8, or 10
-            if active_profiles in [4, 6, 8, 10]:
-                data["settings"]["active_profiles"] = active_profiles
-        
-        if volume_speed is not None:
-            # Validate: must be 1-5
-            if 1 <= volume_speed <= 5:
-                data["settings"]["encoder_speeds"]["volume"] = volume_speed
-        
-        if display_speed is not None:
-            # Validate: must be 1-5
-            if 1 <= display_speed <= 5:
-                data["settings"]["encoder_speeds"]["display"] = display_speed
+        # Handle nested keys with dot notation
+        if setting_key == "encoder_speeds.volume":
+            if isinstance(value, int) and 1 <= value <= 5:
+                data["settings"]["encoder_speeds"]["volume"] = value
+        elif setting_key == "encoder_speeds.display":
+            if isinstance(value, int) and 1 <= value <= 5:
+                data["settings"]["encoder_speeds"]["display"] = value
+        # Note: active_profiles is now hardcoded to 6
         
         # Save updated settings
         with open(keysfile_path, 'w', encoding='utf-8') as f:
