@@ -264,6 +264,18 @@ class ConfigPanel:
             selectcolor="#0B1220",
             activebackground="#0F172A",
             activeforeground="#E2E8F0",
+        ).pack(pady=(0, 4))
+
+        self.text_shift_enter_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(
+            text_tab,
+            text="Use Shift+Enter for new line",
+            variable=self.text_shift_enter_var,
+            bg="#0F172A",
+            fg="#E2E8F0",
+            selectcolor="#0B1220",
+            activebackground="#0F172A",
+            activeforeground="#E2E8F0",
         ).pack(pady=(0, 8))
 
         text_save_button = tk.Button(text_tab, text="Save", bg="#0EA5E9", fg="#082F49", font=("Segoe UI", 10, "bold"), relief="flat", command=self.save_config)
@@ -560,12 +572,14 @@ class ConfigPanel:
             text_content = self.textpara_content_box.get("1.0", "end-1c")
             text_type = self.text_type_var.get()
             text_press_enter = bool(self.text_enter_var.get())
+            text_shift_enter = bool(self.text_shift_enter_var.get())
             extra_data = {
                 "action": "text_input",
                 "software": None,
                 "text_content": text_content,
                 "text_type": text_type,
                 "text_press_enter": text_press_enter,
+                "text_shift_enter": text_shift_enter,
             }
 
             if not text_content.strip():
